@@ -33,72 +33,101 @@
     };
 })();
 
-createArray = function(){
-    var arrayPage = [];
-    var items = numPages();
-    for( var i = 0; i < items; i++){
-        arrayPage.push(i+1);
+
+function extend(obj1, obj2){
+    if(obj2 && obj1){
+        Object.keys(obj2).forEach(function(key){
+            if(typeof obj1[key] === 'object'){
+                obj1[key] = extend(obj1[key], obj2[key]);
+            }else{
+                obj1[key] = obj2[key];
+            }
+        });
     }
-    return arrayPage;
-};
+    return obj1;
+}
 
+function Pagination(options){
+    this.options = extend({
+        recordsPerPage: 1,
+        elemArray: [
+            'one'
+        ]
+    }, options);
+    this.init();
 
-var information = document.querySelector('.information');
-var recordsPerPage = 2;
-var elemArray = [
-    'one',
-    'two',
-    'three',
-    'four',
-    'five',
-    'six',
-    'seven',
-    'eight',
-    'nine',
-    'ten',
-    'eleven',
-    'twelve',
-    'thirteen',
-    'fourteen',
-    'fifteen',
-    'sixteen',
-    'seventeen'
-];
+}
+Pagination.prototype = {
 
-numPages = function(){
-    return Math.ceil(elemArray.length / recordsPerPage);
-};
-
-changePage = function(page){
-    var elements = [];
-    var end =  Math.min((page * recordsPerPage), elemArray.length);
-    console.log(end);
-    elements = elemArray.slice((page - 1)* recordsPerPage, end);
-    information.innerHTML = tmpl('info', {
-        elements: elements
-    });
-};
-
-changePage(1);
-
-var results = document.querySelector('.pagination');
-
-render = function(newPage){
-    newPage = newPage || 1;
-    itemsLength = createArray();
-    results.innerHTML = tmpl('paginationTemplate', {
-        items: itemsLength,
-        currentPage: newPage,
-        start: Math.max(newPage - 2, 1),
-        end: Math.min(newPage + 1, itemsLength.length - 1)
-    });
-};
-render();
-
-results.addEventListener('click',function(e){
-    if(e.srcElement.tagName.toLocaleLowerCase() === 'a'){
-        render(parseInt(e.srcElement.innerHTML, 10));
-        changePage(parseInt(e.srcElement.innerHTML, 10));
+    init: function() {
+        this.findElements();
+        this.changePage(1);
+        this.addHandler();
+        this.render();
+    },
+    findElements: function(){
+        this.information = document.querySelector('.information');
+        this.results = document.querySelector('.pagination');
+    },
+    createArray: function() {
+        this.arrayPage = [];
+        this.items = this.numPages();
+        for( var i = 0; i < this.items; i++){
+            this.arrayPage.push(i+1);
+        }
+        return this.arrayPage;
+    },
+    numPages: function(){
+        return Math.ceil(this.options.elemArray.length / this.options.recordsPerPage);
+    },
+    changePage: function(page){
+        this.elements = [];
+        this.end =  Math.min((page * this.options.recordsPerPage), this.options.elemArray.length);
+        this.start = (page - 1)* this.options.recordsPerPage;
+        this.elements = this.options.elemArray.slice(this.start, this.end);
+        this.information.innerHTML = tmpl('info', {
+            elements: this.elements
+        });
+    },
+    render: function(newPage){
+        newPage = newPage || 1;
+        this.itemsLength = this.createArray();
+        this.results.innerHTML = tmpl('paginationTemplate', {
+            items: this.itemsLength,
+            currentPage: newPage,
+            start: Math.max(newPage - 2, 1),
+            end: Math.min(newPage + 1, this.itemsLength.length - 1)
+        });
+    },
+    addHandler: function(){
+        var self = this;
+        this.results.addEventListener('click',function(e){
+            if(e.srcElement.tagName.toLocaleLowerCase() === 'a'){
+                self.render(parseInt(e.srcElement.innerHTML, 10));
+                self.changePage(parseInt(e.srcElement.innerHTML, 10));
+            }
+        });
     }
+};
+new Pagination({
+    recordsPerPage: 2,
+    elemArray: [
+        'one',
+        'two',
+        'three',
+        'four',
+        'five',
+        'six',
+        'seven',
+        'eight',
+        'nine',
+        'ten',
+        'eleven',
+        'twelve',
+        'thirteen',
+        'fourteen',
+        'fifteen',
+        'sixteen',
+        'seventeen'
+    ]
 });
-
