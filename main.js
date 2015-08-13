@@ -73,9 +73,7 @@ changePage = function(page){
     var elements = [];
     var end =  Math.min((page * recordsPerPage), elemArray.length);
     console.log(end);
-    for( var i = (page - 1) * recordsPerPage; i < end; i++){
-        elements.push(elemArray[i]);
-    }
+    elements = elemArray.slice((page - 1)* recordsPerPage, end);
     information.innerHTML = tmpl('info', {
         elements: elements
     });
