@@ -47,12 +47,12 @@ function extend(obj1, obj2){
     return obj1;
 }
 
+
+
 function Pagination(options){
     this.options = extend({
-        recordsPerPage: 1,
-        elemArray: [
-            'one'
-        ]
+        recordsPerPage: 2,
+        elemArray: []
     }, options);
     this.init();
 
@@ -61,12 +61,10 @@ Pagination.prototype = {
 
     init: function() {
         this.findElements();
-        this.changePage(1);
-        this.addHandler();
         this.render();
+        this.addHandler();
     },
     findElements: function(){
-        this.information = document.querySelector('.information');
         this.results = document.querySelector('.pagination');
     },
     createArray: function() {
@@ -80,37 +78,41 @@ Pagination.prototype = {
     numPages: function(){
         return Math.ceil(this.options.elemArray.length / this.options.recordsPerPage);
     },
-    changePage: function(page){
-        this.elements = [];
-        this.end =  Math.min((page * this.options.recordsPerPage), this.options.elemArray.length);
-        this.start = (page - 1)* this.options.recordsPerPage;
-        this.elements = this.options.elemArray.slice(this.start, this.end);
-        this.information.innerHTML = tmpl('info', {
-            elements: this.elements
-        });
+    getCurrentData: function(){
+        var end =  Math.min((this.currentPage * this.options.recordsPerPage), this.options.elemArray.length),
+            start = (this.currentPage - 1)* this.options.recordsPerPage;
+        //console.log(start, end, this.options.elemArray, this.options.recordsPerPage, this.currentPage)
+
+        return this.options.elemArray.slice(start, end);
     },
     render: function(newPage){
-        newPage = newPage || 1;
+        this.currentPage = newPage || 1;
         this.itemsLength = this.createArray();
         this.results.innerHTML = tmpl('paginationTemplate', {
             items: this.itemsLength,
-            currentPage: newPage,
-            start: Math.max(newPage - 2, 1),
-            end: Math.min(newPage + 1, this.itemsLength.length - 1)
+            currentPage: this.currentPage,
+            start: Math.max(this.currentPage - 2, 1),
+            end: Math.min(this.currentPage + 1, this.itemsLength.length - 1)
         });
+        typeof this.options.onChange === 'function' && this.options.onChange(this.getCurrentData());
     },
     addHandler: function(){
         var self = this;
         this.results.addEventListener('click',function(e){
             if(e.srcElement.tagName.toLocaleLowerCase() === 'a'){
                 self.render(parseInt(e.srcElement.innerHTML, 10));
-                self.changePage(parseInt(e.srcElement.innerHTML, 10));
             }
         });
+    },
+    setData: function(data){
+        this.options.elemArray = data;
+        this.currentPage = 1;
+        this.render();
     }
+
 };
-new Pagination({
-    recordsPerPage: 2,
+var information = document.querySelector('.information');
+var pagination = new Pagination({
     elemArray: [
         'one',
         'two',
@@ -129,5 +131,20 @@ new Pagination({
         'fifteen',
         'sixteen',
         'seventeen'
-    ]
+    ],
+    onChange: function(data){
+        information.innerHTML = tmpl('info', {
+            elements: data
+        });
+    }
 });
+
+setTimeout(function(){
+    pagination.setData([
+        'one',
+        'two',
+        'three',
+        'four',
+        'five'
+    ]);
+}, 5000);
